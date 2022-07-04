@@ -2,43 +2,37 @@ import Circle from "./Circle.js"
 import Sensor from "./Sensor.js"
 
 export default class LifeForm extends Circle {
-  constructor({coordinates, radius, colour, registeredWith, conversionFunc}) {
+  constructor({coordinates, radius, colour, registeredWith, coordToPosition, energy}) {
     super({coordinates, radius, colour})
+    this.energy = energy
 
-    this.register = registeredWith
-    this.conversionFunc = conversionFunc
+    this.registerHandler = registeredWith
+    this.coordToPosition = coordToPosition
     
     this.sensor = new Sensor()
 
-    this.#updateRegister()
-
     this.nextMove = null
-    this.lastUpdateFrame = 0
-  }
+    this.lastUpdatedFrame = 1
 
-  prepareMove() {
-    this.sensor.sense(this.coordinates, this.register, 4)
-    if (this.colour === 'green') {
-      this.nextMove = {
-        x: 1,
-        y: 1
-      }
-    }
-
-    if (this.colour === 'yellow') {
-      this.nextMove = {
-        x: -1,
-        y: -1
-      }
-    }
+    this.#updateRegister()
   }
 
   update(frame) {
-    if (this.lastUpdateFrame == frame) return
-    this.lastUpdateFrame = frame
-    // this.sensor.sense(this.coordinates, this.register, 4)
-    
-    if (this.nextMove) this.move(this.nextMove)
+    if (this.lastUpdatedFrame == frame) return
+    this.lastUpdatedFrame = frame
+
+    this.#prepareMove()
+
+    this.energy -= 1
+    if (this.energy <= 0) {
+      this.#removeFromRegister()
+
+      return
+    }
+
+    if (this.nextMove) {
+      this.move(this.nextMove)
+    }
   }
 
   move(direction) {
@@ -47,47 +41,71 @@ export default class LifeForm extends Circle {
       y: this.coordinates.y + direction.y
     }
 
-    if (this.register.validMove(newPosition.x, newPosition.y)) {
+    if (this.registerHandler.validMove(newPosition.x, newPosition.y)) {
       this.coordinates = newPosition
       this.#updateRegister()
     }
   }
 
+  eat(foodValue) {
+    this.energy += foodValue
+  }
+
+  getType() {
+    return "Life"
+  }
+
   draw(ctx) {
-    const coord = this.conversionFunc(this.coordinates)
+    console.log(this.colour, this.sensor.directions)
+    const coord = this.coordToPosition(this.coordinates)
 
     ctx.beginPath()
     ctx.arc(coord.x, coord.y, this.radius, Math.PI * 2, false)
     ctx.fillStyle = this.colour
     ctx.fill()
 
-    this.#tempDrawSensors(ctx, coord)
+    // this.#tempDrawSensors(ctx, coord)
   }
 
   #updateRegister() {
-    this.register.updateRegister(this)
+    this.registerHandler.update(this)
   }
 
-  #tempDrawSensors(ctx) {
-    this.sensor.directions.forEach((direction, index) => {
-      if (direction != 0) {
-        const xPos = this.coordinates.x + (Sensor.offsets[index].x * (5 - direction))
-        const yPos = this.coordinates.y + (Sensor.offsets[index].y * (5 - direction))
+  #removeFromRegister() {
+    this.registerHandler.remove(this)
+  }
 
-        const drawPos = this.conversionFunc({
-          x: xPos, 
-          y: yPos
-        })
+  #prepareMove() {
+    this.sensor.sense(this.coordinates, this.registerHandler, 4)
 
-        ctx.globalAlpha = 1/4
-
-        ctx.beginPath()
-        ctx.arc(drawPos.x, drawPos.y, this.radius * 2, Math.PI * 2, false)
-        ctx.fillStyle = this.colour
-        ctx.fill()
-
-        ctx.globalAlpha = 1
+    if (this.colour === 'yellow') {
+      this.nextMove = {
+        x: -1,
+        y: 0
       }
-    })
+    }
   }
+
+  // #tempDrawSensors(ctx) {
+  //   this.sensor.directions.forEach((direction, index) => {
+  //     if (direction != 0) {
+  //       const xPos = this.coordinates.x + (Sensor.offsets[index].x * (5 - direction))
+  //       const yPos = this.coordinates.y + (Sensor.offsets[index].y * (5 - direction))
+
+  //       const drawPos = this.coordToPosition({
+  //         x: xPos, 
+  //         y: yPos
+  //       })
+
+  //       ctx.globalAlpha = 1/4
+
+  //       ctx.beginPath()
+  //       ctx.arc(drawPos.x, drawPos.y, this.radius * 2, Math.PI * 2, false)
+  //       ctx.fillStyle = this.colour
+  //       ctx.fill()
+
+  //       ctx.globalAlpha = 1
+  //     }
+  //   })
+  // }
 }

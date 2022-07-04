@@ -10,24 +10,20 @@ export default class Array2D {
   }
 
   get(x, y) {
-    return this.values[x + y * this.width]
+    return this.#get(x, y)
   }
 
   set(x, y, value) {
-    this.values[x + y * this.width] = value
+    this.#set(x, y, value)
   }
 
-  valueExistsAt(x, y) {
-    return this.validPosition(x, y) && (this.get(x, y) != null)
-  }
-
-  forEachObject(callback) {
+  forEach(callback) {
     this.values.forEach(callback)
   }
 
-  findIndex(value) {
+  findIndex(searchValue) {
     for (let i = 0; i < this.width * this.height; i++) {
-      if (this.values[i] === value) {
+      if (this.values[i] === searchValue) {
         return {
           x: i % this.width,
           y: Math.floor(i / this.width)
@@ -38,8 +34,21 @@ export default class Array2D {
     return -1
   }
 
-  validPosition(x, y) {
-    return (x >= 0 && x < this.width) &&
-      (y >= 0 && y < this.height)
+  #get(x, y) {
+    if (this.#validPosition(x, y)) {
+      return this.values[x + y * this.width]
+    }
+
+    return undefined
+  }
+
+  #set(x, y, value) {
+    if (this.#validPosition(x, y)) {
+      this.values[x + y * this.width] = value
+    }
+  }
+
+  #validPosition(x, y) {
+    return (x >= 0 && x < this.width) && (y >= 0 && y < this.height)
   }
 }

@@ -11,7 +11,20 @@ export default class GridFactory {
 
     const gridLines = this.#createGridLines(dimensions, spacing, topLeft)
 
-    return new Grid({dimensions, spacing, topLeft, gridLines})
+    const coordToPosition = this.coordToPosition(spacing, topLeft)
+
+    return new Grid({dimensions, gridLines, coordToPosition})
+  }
+
+  static coordToPosition(spacing, topLeft) {
+    const offset = (spacing) / 2
+
+    return (coordinates) => {
+      return {
+        x: topLeft.x + offset + (spacing * (coordinates.x - 1)),
+        y: topLeft.y + offset + (spacing * (coordinates.y - 1)),
+      }
+    }
   }
 
   static #calcTopLeft(dimensions, spacing, midPoint) {

@@ -1,20 +1,8 @@
 export default class Grid {
-  constructor({dimensions, spacing, topLeft, gridLines}) {
+  constructor({dimensions, gridLines, coordToPosition}) {
     this.dimensions = dimensions
-    this.spacing = spacing
-    this.topLeft = topLeft
     this.gridLines = gridLines
-  }
-
-  coordToPosition() {
-    const offset = (this.spacing) / 2
-
-    return (coordinates) => {
-      return {
-        x: this.topLeft.x + offset + (this.spacing * (coordinates.x - 1)),
-        y: this.topLeft.y + offset + (this.spacing * (coordinates.y - 1)),
-      }
-    }
+    this.coordToPosition = coordToPosition
   }
 
   drawLines(ctx) {

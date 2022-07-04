@@ -1,7 +1,8 @@
 import CanvasHandler from "./classes/CanvasHandler.js"
 import GridFactory from "./classes/GridFactory.js"
 import LifeForm from "./classes/LifeForm.js"
-import Register from "./classes/Register.js"
+import Food from "./classes/Food.js"
+import RegisterHandler from "./classes/RegisterHandler.js"
 
 const gridCanvas = new CanvasHandler({id: 'gridCanvas'})
 
@@ -14,7 +15,7 @@ const grid = GridFactory.create({
   midPoint: gridCanvas.getMidPoint()
 })
 
-const objectRegister = new Register({
+const objectRegister = new RegisterHandler({
   width: grid.dimensions.x,
   height: grid.dimensions.y
 })
@@ -25,10 +26,11 @@ function createLife() {
       x: 4,
       y: 6
     }, 
-    radius: 10,
+    radius: 20,
     colour: 'blue',
     registeredWith: objectRegister,
-    conversionFunc: grid.coordToPosition()
+    coordToPosition: grid.coordToPosition,
+    energy: 4
   })
   
   new LifeForm({
@@ -36,10 +38,11 @@ function createLife() {
       x: 8,
       y: 6
     }, 
-    radius: 10,
-    colour: 'red',
+    radius: 20,
+    colour: 'blue',
     registeredWith: objectRegister,
-    conversionFunc: grid.coordToPosition()
+    coordToPosition: grid.coordToPosition,
+    energy: 4
   })
   
   new LifeForm({
@@ -47,21 +50,23 @@ function createLife() {
       x: 4,
       y: 4
     }, 
-    radius: 10,
-    colour: 'green',
+    radius: 20,
+    colour: 'blue',
     registeredWith: objectRegister,
-    conversionFunc: grid.coordToPosition()
+    coordToPosition: grid.coordToPosition,
+    energy: 4
   })
   
   const life4 = new LifeForm({
     coordinates: {
-      x: 9,
-      y: 10
+      x: 8,
+      y: 8
     }, 
-    radius: 10,
-    colour: 'yellow',
+    radius: 20,
+    colour: 'blue',
     registeredWith: objectRegister,
-    conversionFunc: grid.coordToPosition()
+    coordToPosition: grid.coordToPosition,
+    energy: 4
   })
   
   new LifeForm({
@@ -69,23 +74,38 @@ function createLife() {
       x: 3,
       y: 3
     }, 
-    radius: 10,
-    colour: 'orange',
+    radius: 20,
+    colour: 'blue',
     registeredWith: objectRegister,
-    conversionFunc: grid.coordToPosition()
+    coordToPosition: grid.coordToPosition,
+    energy: 4
   })
   
   new LifeForm({
     coordinates: {
-      x: 2,
-      y: 2
+      x: 4,
+      y: 9
     }, 
-    radius: 10,
-    colour: 'pink',
+    radius: 20,
+    colour: 'yellow',
     registeredWith: objectRegister,
-    conversionFunc: grid.coordToPosition()
+    coordToPosition: grid.coordToPosition,
+    energy: 4
+  })
+
+  new Food({
+    coordinates: {
+      x: 2,
+      y: 9
+    },
+    colour: 'green',
+    registeredWith: objectRegister,
+    coordToPosition: grid.coordToPosition,
+    energyValue: 10
   })
 }
+
+console.log(objectRegister)
 
 let timer = 120
 
@@ -97,28 +117,18 @@ function animate() {
     gridCanvas.clear()
 
     grid.drawLines(gridCanvas.getCtx())
-  
-    //is this the correct order????
 
     objectRegister.incrementFrame()
-  
     
-
-    objectRegister.eachObject(object => {
-      if (object != null) {
-        object.update(objectRegister.getCurrentFrame())
+    objectRegister.eachObject(obj => {
+      if (obj != null) {
+        obj.update(objectRegister.getCurrentFrame())
       }
     })
 
-    objectRegister.eachObject(object => {
-      if (object != null) {
-        object.prepareMove()
-      }
-    })
-
-    objectRegister.eachObject(object => {
-      if (object != null) {
-        object.draw(gridCanvas.getCtx())
+    objectRegister.eachObject(obj => {
+      if (obj != null) {
+        obj.draw(gridCanvas.getCtx())
       }
     })
   }
