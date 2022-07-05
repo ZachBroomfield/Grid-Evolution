@@ -3,15 +3,16 @@ import GridFactory from "./classes/GridFactory.js"
 import LifeForm from "./classes/LifeForm.js"
 import Food from "./classes/Food.js"
 import RegisterHandler from "./classes/RegisterHandler.js"
+import { getColours } from "./utils.js"
 
 const gridCanvas = new CanvasHandler({id: 'gridCanvas'})
 
 const grid = GridFactory.create({
   dimensions: {
-    x: 9,
-    y: 10
+    x: 100,
+    y: 100
   },
-  spacing: 50,
+  canvasSize: gridCanvas.getDimensions(),
   midPoint: gridCanvas.getMidPoint()
 })
 
@@ -20,100 +21,55 @@ const objectRegister = new RegisterHandler({
   height: grid.dimensions.y
 })
 
-function createLife() {
-  new LifeForm({
-    coordinates: {
-      x: 4,
-      y: 6
-    }, 
-    radius: 20,
-    colour: 'blue',
-    registeredWith: objectRegister,
-    coordToPosition: grid.coordToPosition,
-    energy: 4
-  })
+function createLife(amount) {
+  for (let i = 0; i < amount; i++) {
+    const randCoords = {
+      x: Math.ceil(Math.random() * grid.dimensions.x),
+      y: Math.ceil(Math.random() * grid.dimensions.y)
+    }
   
-  new LifeForm({
-    coordinates: {
-      x: 8,
-      y: 6
-    }, 
-    radius: 20,
-    colour: 'blue',
-    registeredWith: objectRegister,
-    coordToPosition: grid.coordToPosition,
-    energy: 4
-  })
-  
-  new LifeForm({
-    coordinates: {
-      x: 4,
-      y: 4
-    }, 
-    radius: 20,
-    colour: 'blue',
-    registeredWith: objectRegister,
-    coordToPosition: grid.coordToPosition,
-    energy: 4
-  })
-  
-  const life4 = new LifeForm({
-    coordinates: {
-      x: 8,
-      y: 8
-    }, 
-    radius: 20,
-    colour: 'blue',
-    registeredWith: objectRegister,
-    coordToPosition: grid.coordToPosition,
-    energy: 4
-  })
-  
-  new LifeForm({
-    coordinates: {
-      x: 3,
-      y: 3
-    }, 
-    radius: 20,
-    colour: 'blue',
-    registeredWith: objectRegister,
-    coordToPosition: grid.coordToPosition,
-    energy: 4
-  })
-  
-  new LifeForm({
-    coordinates: {
-      x: 4,
-      y: 9
-    }, 
-    radius: 20,
-    colour: 'yellow',
-    registeredWith: objectRegister,
-    coordToPosition: grid.coordToPosition,
-    energy: 4
-  })
-
-  new Food({
-    coordinates: {
-      x: 2,
-      y: 9
-    },
-    colour: 'green',
-    registeredWith: objectRegister,
-    coordToPosition: grid.coordToPosition,
-    energyValue: 10
-  })
+    if (objectRegister.getObjectAt(randCoords.x, randCoords.y) === null) {
+      const rand = Math.floor(Math.random() * getColours().length)
+      new LifeForm({
+        coordinates: randCoords,
+        spacing: grid.getSpacing(),
+        colour: getColours()[rand].name,
+        registeredWith: objectRegister,
+        coordToPosition: grid.coordToPosition,
+        energy: 100
+      })
+    }
+  }
 }
 
-console.log(objectRegister)
+function addFood(amount) { //bad implementation
+  for (let i = 0; i < amount; i++) {
+    const randCoords = {
+      x: Math.ceil(Math.random() * grid.dimensions.x),
+      y: Math.ceil(Math.random() * grid.dimensions.y)
+    }
+  
+    if (objectRegister.getObjectAt(randCoords.x, randCoords.y) === null) {
+      new Food({
+        coordinates: randCoords,
+        spacing: grid.getSpacing(),
+        colour: 'green',
+        registeredWith: objectRegister,
+        coordToPosition: grid.coordToPosition,
+        energyValue: 100
+      })
+    }
+  }
+}
 
-let timer = 120
+let timer = 10
 
-createLife()
+createLife(50)
+addFood(150)
 animate()
 
 function animate() {
-  if (timer % 120 == 0) {
+  if (timer % 10 == 0) {
     gridCanvas.clear()
 
     grid.drawLines(gridCanvas.getCtx())
@@ -125,6 +81,10 @@ function animate() {
         obj.update(objectRegister.getCurrentFrame())
       }
     })
+
+    addFood(8)
+
+    if (timer % 120 === 0) console.log(objectRegister.averageAge())
 
     objectRegister.eachObject(obj => {
       if (obj != null) {

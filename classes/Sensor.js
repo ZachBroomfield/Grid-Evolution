@@ -1,13 +1,15 @@
+import Coord2D from "./Coord2D.js"
+
 export default class Sensor {
   static offsets = [
-    {x: 0, y: -1},
-    {x: 1, y: -1},
-    {x: 1, y: 0},
-    {x: 1, y: 1},
-    {x: 0, y: 1},
-    {x: -1, y: 1},
-    {x: -1, y: 0},
-    {x: -1, y: -1},
+    new Coord2D({x: 0, y: -1}),
+    new Coord2D({x: 1, y: -1}),
+    new Coord2D({x: 1, y: 0}),
+    new Coord2D({x: 1, y: 1}),
+    new Coord2D({x: 0, y: 1}),
+    new Coord2D({x: -1, y: 1}),
+    new Coord2D({x: -1, y: 0}),
+    new Coord2D({x: -1, y: -1}),
   ]
 
   // static counter = 0

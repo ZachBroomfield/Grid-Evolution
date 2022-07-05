@@ -1,9 +1,12 @@
 import Register from "./Register.js"
+import Food from "./Food.js"
 
 export default class RegisterHandler {
   constructor({width, height}) {
     this.register = new Register({width, height})
     this.currentFrame = 0
+
+    this.ages = []
   }
 
   incrementFrame() {
@@ -26,7 +29,7 @@ export default class RegisterHandler {
     this.register.forEach(callback)
   }
 
-  validMove(x, y) {
+  validMove({x, y}) {
     return this.#validMove(x, y)
   }
 
@@ -34,9 +37,20 @@ export default class RegisterHandler {
     return this.register.get(x, y)
   }
 
+  addAge(age) {
+    this.ages.push(age)
+    if (this.ages.length > 100) this.ages.shift()
+  }
+
+  averageAge() {
+    if (this.ages.length === 0) return 0
+    return this.ages.reduce((total, num) => {
+      return total + num
+    }) / this.ages.length
+  }
+
   #remove(obj) {
     const index = this.register.findIndex(obj)
-    console.log(index)
     if (index !== -1) {
       this.register.set(index.x, index.y, null)
     }

@@ -17,6 +17,13 @@ export default class CanvasHandler {
     }
   }
 
+  getDimensions() {
+    return {
+      width: this.canvas.width,
+      height: this.canvas.height
+    }
+  }
+
   clear() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
   }

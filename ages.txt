@@ -1,0 +1,7 @@
+First run:
+  start:
+    19.8, 19.3, 20.4
+  
+  within a few minutes hit 22.0
+
+  hit 22.36, then had a massive bloom and plummeted to 22.30 within a few seconds

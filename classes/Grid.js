@@ -1,12 +1,17 @@
 export default class Grid {
-  constructor({dimensions, gridLines, coordToPosition}) {
+  constructor({dimensions, gridLines, spacing, coordToPosition}) {
     this.dimensions = dimensions
     this.gridLines = gridLines
+    this.spacing = spacing
     this.coordToPosition = coordToPosition
   }
 
   drawLines(ctx) {
     this.#drawGridLines(ctx)
+  }
+
+  getSpacing() {
+    return this.spacing
   }
 
   #drawGridLines(ctx) {

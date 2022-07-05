@@ -1,18 +1,46 @@
 import Circle from "./Circle.js"
 import Sensor from "./Sensor.js"
+import Movement from "./Movement.js"
+import Network from "./neuralNetwork/Network.js"
+import Coord2D from "./Coord2D.js"
+import { getColours } from "../utils.js"
 
 export default class LifeForm extends Circle {
-  constructor({coordinates, radius, colour, registeredWith, coordToPosition, energy}) {
+
+  static maxEnergy = 200
+
+  constructor({coordinates, spacing, colour, registeredWith, coordToPosition, energy, brain = null, frame = 1}) {
+    const radius = Math.floor(spacing / 2 - 2)
+
     super({coordinates, radius, colour})
     this.energy = energy
+
+    this.spacing = spacing
 
     this.registerHandler = registeredWith
     this.coordToPosition = coordToPosition
     
     this.sensor = new Sensor()
 
+    this.age = 0
+
     this.nextMove = null
-    this.lastUpdatedFrame = 1
+    this.lastUpdatedFrame = frame
+
+    // if (brain) {
+    //   this.brain = brain
+    //   Network.mutate(this.brain, 0.1)
+    // } else {
+    //   this.brain = new Network({
+    //     neuronCounts: [9, 10, 5]
+    //   })
+    // }
+
+    this.brain = new Network({
+      neuronCounts: [9, 12, 10, 5],
+      brain: brain,
+      mutationRate: 0.05
+    })
 
     this.#updateRegister()
   }
@@ -21,27 +49,27 @@ export default class LifeForm extends Circle {
     if (this.lastUpdatedFrame == frame) return
     this.lastUpdatedFrame = frame
 
-    this.#prepareMove()
+    this.age += 1
 
     this.energy -= 1
+    // console.log(this.energy)
     if (this.energy <= 0) {
       this.#removeFromRegister()
 
       return
     }
 
+    this.#prepareTurn()
+
     if (this.nextMove) {
       this.move(this.nextMove)
     }
   }
 
-  move(direction) {
-    const newPosition = {
-      x: this.coordinates.x + direction.x,
-      y: this.coordinates.y + direction.y
-    }
+  move(movement) {
+    const newPosition = Coord2D.sumCoords(this.coordinates, movement)
 
-    if (this.registerHandler.validMove(newPosition.x, newPosition.y)) {
+    if (this.registerHandler.validMove(newPosition)) {
       this.coordinates = newPosition
       this.#updateRegister()
     }
@@ -49,6 +77,8 @@ export default class LifeForm extends Circle {
 
   eat(foodValue) {
     this.energy += foodValue
+
+    if (this.energy > LifeForm.maxEnergy) this.energy = LifeForm.maxEnergy
   }
 
   getType() {
@@ -56,15 +86,12 @@ export default class LifeForm extends Circle {
   }
 
   draw(ctx) {
-    console.log(this.colour, this.sensor.directions)
-    const coord = this.coordToPosition(this.coordinates)
+    const position = this.coordToPosition(this.coordinates)
 
     ctx.beginPath()
-    ctx.arc(coord.x, coord.y, this.radius, Math.PI * 2, false)
+    ctx.arc(position.x, position.y, this.radius, Math.PI * 2, false)
     ctx.fillStyle = this.colour
     ctx.fill()
-
-    // this.#tempDrawSensors(ctx, coord)
   }
 
   #updateRegister() {
@@ -72,40 +99,71 @@ export default class LifeForm extends Circle {
   }
 
   #removeFromRegister() {
+    this.registerHandler.addAge(this.age)
     this.registerHandler.remove(this)
   }
 
-  #prepareMove() {
+  #prepareTurn() {
     this.sensor.sense(this.coordinates, this.registerHandler, 4)
 
-    if (this.colour === 'yellow') {
-      this.nextMove = {
-        x: -1,
-        y: 0
+    const offsets = this.sensor.directions.map(direction => {
+      return direction / 4
+    })
+
+    offsets.push(this.energy / LifeForm.maxEnergy)
+
+    const outputs = Network.feedForward(offsets, this.brain)
+
+    if (outputs[4] && this.energy >= 4 && this.age > 10) {
+      const childCell = this.#findChildCell()
+
+      if (childCell) {
+        this.#reproduce(childCell)
+        return
       }
     }
+
+    let nextMove = new Coord2D({x: 0, y: 0})
+
+    if (outputs[0]) nextMove.add(Movement.up)
+    if (outputs[1]) nextMove.add(Movement.right)
+    if (outputs[2]) nextMove.add(Movement.down)
+    if (outputs[3]) nextMove.add(Movement.left)
+
+    this.nextMove = nextMove
   }
 
-  // #tempDrawSensors(ctx) {
-  //   this.sensor.directions.forEach((direction, index) => {
-  //     if (direction != 0) {
-  //       const xPos = this.coordinates.x + (Sensor.offsets[index].x * (5 - direction))
-  //       const yPos = this.coordinates.y + (Sensor.offsets[index].y * (5 - direction))
+  #findChildCell() {
+    const validCells = Sensor.offsets.filter(offset => {
+      return this.registerHandler.validMove(Coord2D.sumCoords(this.coordinates, offset))
+    })
 
-  //       const drawPos = this.coordToPosition({
-  //         x: xPos, 
-  //         y: yPos
-  //       })
+    if (validCells.length === 0) return false
 
-  //       ctx.globalAlpha = 1/4
+    const rand = Math.floor(Math.random() * validCells.length)
 
-  //       ctx.beginPath()
-  //       ctx.arc(drawPos.x, drawPos.y, this.radius * 2, Math.PI * 2, false)
-  //       ctx.fillStyle = this.colour
-  //       ctx.fill()
+    return Coord2D.sumCoords(this.coordinates, validCells[rand])
+  }
 
-  //       ctx.globalAlpha = 1
-  //     }
-  //   })
-  // }
+  #reproduce(childCell) {
+    const halfEnergy = Math.floor(this.energy / 2)
+    let colour = this.colour
+    if (Math.random() < 0.0001) {
+      const rand = Math.floor(Math.random() * getColours().length)
+      colour = getColours()[rand].name
+    }
+
+    new LifeForm({
+      coordinates: childCell, 
+      spacing: this.spacing,
+      colour: colour,
+      registeredWith: this.registerHandler,
+      coordToPosition: this.coordToPosition,
+      energy: halfEnergy,
+      brain: this.brain,
+      frame: this.lastUpdatedFrame
+    }).brain
+
+    this.energy -= halfEnergy
+  }
 }

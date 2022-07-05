@@ -24,14 +24,18 @@ export default class Array2D {
   findIndex(searchValue) {
     for (let i = 0; i < this.width * this.height; i++) {
       if (this.values[i] === searchValue) {
-        return {
-          x: i % this.width,
-          y: Math.floor(i / this.width)
-        }
+        return this.indexToCoords(i)
       }
     }
 
     return -1
+  }
+
+  indexToCoords(index) {
+    return {
+      x: index % this.width,
+      y: Math.floor(index / this.width)
+    }
   }
 
   #get(x, y) {
