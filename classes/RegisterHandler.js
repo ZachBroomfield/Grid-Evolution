@@ -1,5 +1,4 @@
 import Register from "./Register.js"
-import Food from "./Food.js"
 
 export default class RegisterHandler {
   constructor({width, height}) {
@@ -66,7 +65,7 @@ export default class RegisterHandler {
 
   #update(obj) {
     const oldCoords = this.register.findIndex(obj)
-    const newCoords = obj.coordinates
+    const newCoords = obj.getCoordinates()
 
     if (oldCoords !== -1) {
       if (oldCoords.x === newCoords.x && oldCoords.y === newCoords.y) {
@@ -83,14 +82,6 @@ export default class RegisterHandler {
     }
 
     this.register.set(newCoords.x, newCoords.y, obj)
-
-    // if (this.register.valueExistsAt(newCoords.x, newCoords.y)){}
-    // const currentObjAtCoords = this.getObjectAt(newCoords.x, newCoords.y)
-
-    // if (currentObjAtCoords) {
-    //   obj.eat(currentObjAtCoords.getEnergy())
-    // }
-    // this.register.set(obj)
   }
 
 

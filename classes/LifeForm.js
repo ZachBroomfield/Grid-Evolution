@@ -7,7 +7,7 @@ import { getColours } from "../utils.js"
 
 export default class LifeForm extends Circle {
 
-  static maxEnergy = 200
+  static #maxEnergy = 400
 
   constructor({coordinates, spacing, colour, registeredWith, coordToPosition, energy, brain = null, frame = 1}) {
     const radius = Math.floor(spacing / 2 - 2)
@@ -23,21 +23,13 @@ export default class LifeForm extends Circle {
     this.sensor = new Sensor()
 
     this.age = 0
+    this.reproductionCooldown = 60
 
     this.nextMove = null
     this.lastUpdatedFrame = frame
 
-    // if (brain) {
-    //   this.brain = brain
-    //   Network.mutate(this.brain, 0.1)
-    // } else {
-    //   this.brain = new Network({
-    //     neuronCounts: [9, 10, 5]
-    //   })
-    // }
-
     this.brain = new Network({
-      neuronCounts: [9, 12, 10, 5],
+      neuronCounts: [25, 30, 20, 5],
       brain: brain,
       mutationRate: 0.05
     })
@@ -50,9 +42,10 @@ export default class LifeForm extends Circle {
     this.lastUpdatedFrame = frame
 
     this.age += 1
+    this.reproductionCooldown -= 1
 
     this.energy -= 1
-    // console.log(this.energy)
+
     if (this.energy <= 0) {
       this.#removeFromRegister()
 
@@ -67,10 +60,10 @@ export default class LifeForm extends Circle {
   }
 
   move(movement) {
-    const newPosition = Coord2D.sumCoords(this.coordinates, movement)
+    const newPosition = Coord2D.sumCoords(this.getCoordinates(), movement)
 
     if (this.registerHandler.validMove(newPosition)) {
-      this.coordinates = newPosition
+      this.setCoordinates(newPosition)
       this.#updateRegister()
     }
   }
@@ -78,7 +71,7 @@ export default class LifeForm extends Circle {
   eat(foodValue) {
     this.energy += foodValue
 
-    if (this.energy > LifeForm.maxEnergy) this.energy = LifeForm.maxEnergy
+    if (this.energy > LifeForm.maxEnergy) this.energy = LifeForm.#maxEnergy
   }
 
   getType() {
@@ -86,11 +79,11 @@ export default class LifeForm extends Circle {
   }
 
   draw(ctx) {
-    const position = this.coordToPosition(this.coordinates)
+    const position = this.coordToPosition(this.getCoordinates())
 
     ctx.beginPath()
-    ctx.arc(position.x, position.y, this.radius, Math.PI * 2, false)
-    ctx.fillStyle = this.colour
+    ctx.arc(position.x, position.y, this.getRadius(), Math.PI * 2, false)
+    ctx.fillStyle = this.getColour()
     ctx.fill()
   }
 
@@ -104,20 +97,31 @@ export default class LifeForm extends Circle {
   }
 
   #prepareTurn() {
-    this.sensor.sense(this.coordinates, this.registerHandler, 4)
+    this.sensor.sense(this.getCoordinates(), this.registerHandler, 32)
 
-    const offsets = this.sensor.directions.map(direction => {
-      return direction / 4
+    const lifeOffsets = this.sensor.lifeSense.map(direction => {
+      return direction / 8
     })
 
-    offsets.push(this.energy / LifeForm.maxEnergy)
+    const foodOffsets = this.sensor.foodSense.map(direction => {
+      return direction / 32
+    })
+
+    const wallOffsets = this.sensor.wallSense.map(direction => {
+      return direction / 8
+    })
+
+    const offsets = lifeOffsets.concat(foodOffsets).concat(wallOffsets)
+
+    offsets.push(this.energy / LifeForm.#maxEnergy)
 
     const outputs = Network.feedForward(offsets, this.brain)
 
-    if (outputs[4] && this.energy >= 4 && this.age > 10) {
+    if (outputs[4] && this.energy >= 4 && this.reproductionCooldown <= 0) {
       const childCell = this.#findChildCell()
 
       if (childCell) {
+        this.reproductionCooldown = 30
         this.#reproduce(childCell)
         return
       }
@@ -135,19 +139,19 @@ export default class LifeForm extends Circle {
 
   #findChildCell() {
     const validCells = Sensor.offsets.filter(offset => {
-      return this.registerHandler.validMove(Coord2D.sumCoords(this.coordinates, offset))
+      return this.registerHandler.validMove(Coord2D.sumCoords(this.getCoordinates(), offset))
     })
 
     if (validCells.length === 0) return false
 
     const rand = Math.floor(Math.random() * validCells.length)
 
-    return Coord2D.sumCoords(this.coordinates, validCells[rand])
+    return Coord2D.sumCoords(this.getCoordinates(), validCells[rand])
   }
 
   #reproduce(childCell) {
     const halfEnergy = Math.floor(this.energy / 2)
-    let colour = this.colour
+    let colour = this.getColour()
     if (Math.random() < 0.0001) {
       const rand = Math.floor(Math.random() * getColours().length)
       colour = getColours()[rand].name

@@ -9,8 +9,8 @@ const gridCanvas = new CanvasHandler({id: 'gridCanvas'})
 
 const grid = GridFactory.create({
   dimensions: {
-    x: 100,
-    y: 100
+    x: 160,
+    y: 90
   },
   canvasSize: gridCanvas.getDimensions(),
   midPoint: gridCanvas.getMidPoint()
@@ -64,8 +64,8 @@ function addFood(amount) { //bad implementation
 
 let timer = 10
 
-createLife(50)
-addFood(150)
+createLife(250)
+addFood(1500)
 animate()
 
 function animate() {
@@ -82,9 +82,7 @@ function animate() {
       }
     })
 
-    addFood(8)
-
-    if (timer % 120 === 0) console.log(objectRegister.averageAge())
+    addFood(5)
 
     objectRegister.eachObject(obj => {
       if (obj != null) {

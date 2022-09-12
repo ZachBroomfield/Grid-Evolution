@@ -33,14 +33,14 @@ export default class GridFactory {
 
   static #normaliseDimensions(dimensions) {
     return {
-      x: Math.min(dimensions.x, 100),
-      y: Math.min(dimensions.y, 100)
+      x: Math.min(dimensions.x, 200),
+      y: Math.min(dimensions.y, 200)
     }
   }
 
   static #calcSpacing(dimensions, canvasSize) {
-    const maxWidth = Math.floor(canvasSize.width * 0.9)
-    const maxHeight = Math.floor(canvasSize.height * 0.9)
+    const maxWidth = Math.floor(canvasSize.width * 1)
+    const maxHeight = Math.floor(canvasSize.height * 1)
 
     const widthSpacing = Math.floor((maxWidth - dimensions.x) / dimensions.x)
     const heightSpacing = Math.floor((maxHeight - dimensions.y) / dimensions.y)

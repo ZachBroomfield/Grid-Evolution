@@ -1,14 +1,17 @@
 import Circle from "./Circle.js"
 
 export default class Food extends Circle {
+  #register
+  #coordToPosition
+  #energyValue
   constructor({coordinates, spacing, colour, registeredWith, coordToPosition, energyValue = 20}) {
     const radius = Math.floor(spacing / 2 - 2)
 
     super({coordinates, radius, colour})
 
-    this.register = registeredWith
-    this.coordToPosition = coordToPosition
-    this.energyValue = energyValue
+    this.#register = registeredWith
+    this.#coordToPosition = coordToPosition
+    this.#energyValue = energyValue
 
     this.#updateRegister()
   }
@@ -18,32 +21,23 @@ export default class Food extends Circle {
   }
 
   update() {
-    // this.energyValue -= 1
-    // this.radius = this.energyValue
-
-    // if (this.energyValue == 0) {
-    //   this.#removeFromRegister()
-    // }
+    
   }
 
   draw(ctx) {
-    const coord = this.coordToPosition(this.coordinates)
+    const position = this.#coordToPosition(this.getCoordinates())
 
     ctx.beginPath()
-    ctx.arc(coord.x, coord.y, this.radius, Math.PI * 2, false)
-    ctx.fillStyle = this.colour
+    ctx.arc(position.x, position.y, this.getRadius(), Math.PI * 2, false)
+    ctx.fillStyle = this.getColour()
     ctx.fill()
   }
 
   getEnergy() {
-    return this.energyValue
+    return this.#energyValue
   }
 
   #updateRegister() {
-    this.register.update(this)
-  }
-
-  #removeFromRegister() {
-    this.register.remove(this)
+    this.#register.update(this)
   }
 }

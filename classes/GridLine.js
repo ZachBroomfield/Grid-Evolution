@@ -2,8 +2,6 @@ export default class GridLine {
   constructor({start, end}) {
     this.start = start
     this.end = end
-
-    // maybe change to segment class?
   }
 
   get() {

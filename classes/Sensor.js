@@ -12,19 +12,32 @@ export default class Sensor {
     new Coord2D({x: -1, y: -1}),
   ]
 
-  // static counter = 0
-
-
   constructor() {
     //starting up, heading clockwise
-    this.directions = [0, 0, 0, 0, 0, 0, 0, 0]
+    this.lifeSense = [0, 0, 0, 0, 0, 0, 0, 0]
+    this.foodSense = [0, 0, 0, 0, 0, 0, 0, 0]
+    this.wallSense = [0, 0, 0, 0, 0, 0, 0, 0]
   }
 
   sense(coords, registerHandler, range) {
-    this.directions = [0, 0, 0, 0, 0, 0, 0, 0]
+    this.lifeSense = [0, 0, 0, 0, 0, 0, 0, 0]
+    this.foodSense = [0, 0, 0, 0, 0, 0, 0, 0]
+    this.wallSense = [0, 0, 0, 0, 0, 0, 0, 0]
 
     Sensor.offsets.forEach((offset, index) => {
-      this.directions[index] = this.#generateSense(offset, coords, registerHandler, range)
+      const sensed = this.#generateSense(offset, coords, registerHandler, range)
+      
+      switch (sensed.type) {
+        case "Life":
+          this.lifeSense[index] = sensed.value
+          break
+        case "Food":
+          this.foodSense[index] = sensed.value
+          break
+        case "Wall":
+          this.wallSense[index] = sensed.value
+          break
+      }
     })
   }
 
@@ -38,10 +51,11 @@ export default class Sensor {
     const sensedObject = registerHandler.getObjectAt(xVal, yVal)
 
     if (sensedObject) {
-      if (sensedObject.getType() === "Food") return -remainingRange
-
-      return remainingRange
+      return {value: remainingRange, type: sensedObject.getType()}
     } else {
+      if (sensedObject === undefined) {
+        return {value: remainingRange, type: "Wall"}
+      }
       return this.#generateSense(offset, coords, registerHandler, remainingRange - 1, maxRange)
     }
     
